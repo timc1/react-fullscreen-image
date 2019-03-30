@@ -1,28 +1,42 @@
-import React, { Component } from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React from 'react'
+import './app.css'
 
-class App extends Component {
-  render() {
-    return (
-      <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <p>
-            Edit <code>src/App.tsx</code> and save to reload.
-          </p>
-          <a
-            className="App-link"
-            href="https://reactjs.org"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn React
-          </a>
-        </header>
-      </div>
-    );
-  }
+import image1 from './assets/images/unsplash_image_1.jpeg'
+import image2 from './assets/images/unsplash_image_2.jpeg'
+import image3 from './assets/images/unsplash_image_3.jpeg'
+import image4 from './assets/images/unsplash_image_4.jpeg'
+import image5 from './assets/images/unsplash_image_5.jpeg'
+import image6 from './assets/images/unsplash_image_6.jpeg'
+import image7 from './assets/images/unsplash_image_7.jpeg'
+import image8 from './assets/images/unsplash_image_8.jpeg'
+import image9 from './assets/images/unsplash_image_9.jpeg'
+
+import { ImageGroup, Image } from './fullscreen'
+
+const images = [
+  image1,
+  image2,
+  image3,
+  image4,
+  image5,
+  image6,
+  image7,
+  image8,
+  image9,
+]
+
+export default function App() {
+  return (
+    <div className="container">
+      <ImageGroup>
+        <ul className="images">
+          {images.map(i => (
+            <li key={i}>
+              <Image src={i} alt="mountains" />
+            </li>
+          ))}
+        </ul>
+      </ImageGroup>
+    </div>
+  )
 }
-
-export default App;
