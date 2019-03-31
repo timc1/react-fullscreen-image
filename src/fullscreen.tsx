@@ -1,7 +1,10 @@
 import React from 'react'
 
+// Type definitions
+// ================
 type ImageGroupState = {
-  currentFocusedImageIndex: number
+  currentFocusedImageIndex: number | null
+  hasAnimatedZoomAlready: boolean
 }
 
 function reducer(
@@ -15,6 +18,12 @@ function reducer(
     case ImageGroup.actions.toggleExpandImage:
       return {
         ...state,
+        hasAnimatedZoomAlready: true,
+        currentFocusedImageIndex: action.payload.index,
+      }
+    case ImageGroup.actions.toggleExpandImageAnimate:
+      return {
+        ...state,
         currentFocusedImageIndex: action.payload.index,
       }
     default:
@@ -22,15 +31,13 @@ function reducer(
   }
 }
 
-ImageGroup.actions = {
-  toggleExpandImage: 'TOGGLE_EXPAND_IMAGE',
-}
-Image.displayName = 'Image'
-
 export function ImageGroup({ children }: { children: React.ReactNode }): any {
   const [state, dispatch] = React.useReducer(reducer, {
-    currentFocusedImageIndex: -1,
+    currentFocusedImageIndex: null,
+    hasAnimatedZoomAlready: false,
   })
+
+  console.log('state', state)
 
   /**
    * Returns the updated children with props passed to all nested <Image />
@@ -43,9 +50,14 @@ export function ImageGroup({ children }: { children: React.ReactNode }): any {
       // @ts-ignore
       return React.cloneElement(child, {
         'data-fullscreen': index,
+        isFocused: state.currentFocusedImageIndex === index,
+        hasAnimatedZoomAlready: state.hasAnimatedZoomAlready,
         onClick: () =>
           dispatch({
-            type: ImageGroup.actions.toggleExpandImage,
+            type:
+              state.currentFocusedImageIndex !== null
+                ? ImageGroup.actions.toggleExpandImage
+                : ImageGroup.actions.toggleExpandImageAnimate,
             payload: {
               index,
             },
@@ -53,8 +65,6 @@ export function ImageGroup({ children }: { children: React.ReactNode }): any {
       })
     }
   )
-
-  console.log('state', state)
 
   return updatedChildren
 }
@@ -68,7 +78,39 @@ export function Image({
   alt: string
 }): any {
   // @ts-ignore
-  const { onClick, ...rest } = props
+  const { onClick, isFocused, hasAnimatedZoomAlready, ...rest } = props
+  const isCurrentlyFocused = React.useRef(false)
+
+  const initialRender = React.useRef(false)
+  React.useEffect(() => {
+    if (initialRender.current) {
+      if (isFocused) {
+        isCurrentlyFocused.current = true
+        if (hasAnimatedZoomAlready) {
+          // Immediately show
+          console.log('immediately show')
+        } else {
+          // Animate in
+          console.log('animate in')
+        }
+      } else {
+        if (isCurrentlyFocused.current) {
+          if (hasAnimatedZoomAlready) {
+            // Immediately hide
+            console.log('immediately hide')
+          } else {
+            // Animate out
+            console.log('animate out')
+          }
+
+          isCurrentlyFocused.current = false
+        }
+      }
+    } else {
+      initialRender.current = true
+    }
+  }, [isFocused, hasAnimatedZoomAlready])
+
   return (
     <div
       style={{
@@ -105,7 +147,7 @@ export function Image({
 
 function mapPropsToChildren(
   children: React.ReactNode,
-  fn: (child: React.ReactNode, index: number) => any
+  fn: (child: React.ReactNode, index: number) => React.ReactNode
 ): {
   updatedChildren: React.ReactNode
   count: number
@@ -115,9 +157,9 @@ function mapPropsToChildren(
   function recursiveMap(children: React.ReactNode): React.ReactNode {
     return React.Children.map(children, child => {
       // @ts-ignore
-      if (child.type.displayName === 'Image') {
-        count++
+      if (child.type.displayName === Image.displayName) {
         child = fn(child, count)
+        count++
         return child
       }
 
@@ -144,3 +186,9 @@ function mapPropsToChildren(
     count,
   }
 }
+
+ImageGroup.actions = {
+  toggleExpandImageAnimate: 'TOGGLE_EXPAND_IMAGE_ANIMATE',
+  toggleExpandImage: 'TOGGLE_EXPAND_IMAGE',
+}
+Image.displayName = 'Image'
