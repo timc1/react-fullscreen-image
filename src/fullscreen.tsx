@@ -1,165 +1,261 @@
 import React from 'react'
+import './fullscreen2.css'
 
-// Type definitions
-// ================
-type ImageGroupState = {
-  currentFocusedImageIndex: number | null
-  hasAnimatedZoomAlready: boolean
+type ImageGroupProps = {
+  children: React.ReactNode
+}
+
+type ImageGroupStateTypes = {
+  currentFocusedImageIndex: null | number
+  isImageGroupExpanded: boolean
+  shouldAnimate: boolean
+}
+
+type ImageGroupActionTypes = {
+  type: string
+  payload?: any
+}
+
+type ImageProps = {
+  src: string
+  alt: string
+  style?: object
+  [k: string]: any
 }
 
 function reducer(
-  state: ImageGroupState,
-  action: {
-    type: string
-    payload?: any
-  }
-): ImageGroupState {
+  state: ImageGroupStateTypes,
+  action: ImageGroupActionTypes
+): ImageGroupStateTypes {
   switch (action.type) {
-    case ImageGroup.actions.toggleExpandImage:
+    case ImageGroup.actions.toggleExpand:
       return {
         ...state,
-        hasAnimatedZoomAlready: true,
-        currentFocusedImageIndex: action.payload.index,
+        currentFocusedImageIndex: action.payload.id,
+        isImageGroupExpanded: true,
+        shouldAnimate: false,
       }
-    case ImageGroup.actions.toggleExpandImageAnimate:
+    case ImageGroup.actions.toggleExpandAnimate:
       return {
         ...state,
-        currentFocusedImageIndex: action.payload.index,
+        currentFocusedImageIndex: action.payload.id,
+        isImageGroupExpanded: true,
+        shouldAnimate: true,
+      }
+    case ImageGroup.actions.toggleCloseAnimate:
+      return {
+        ...state,
+        currentFocusedImageIndex: null,
+        isImageGroupExpanded: false,
+        shouldAnimate: true,
       }
     default:
-      throw new Error(`No action type of "${action.type}" found.`)
+      throw new Error(`No case defined for type '${action.type}'.`)
   }
 }
 
-export function ImageGroup({ children }: { children: React.ReactNode }): any {
+export function ImageGroup({ children }: ImageGroupProps): any {
+  const isAnimating = React.useRef(false)
+
   const [state, dispatch] = React.useReducer(reducer, {
     currentFocusedImageIndex: null,
-    hasAnimatedZoomAlready: false,
+    isImageGroupExpanded: false,
+    shouldAnimate: true,
   })
+
+  const { updatedChildren, numberOfImageChildren } = mapPropsToChildren(
+    children,
+    (child, index) =>
+      React.cloneElement(child, {
+        'data-fullscreen-id': index,
+        isFocused: index === state.currentFocusedImageIndex,
+        shouldAnimate: state.shouldAnimate,
+        isImageGroupExpanded: state.isImageGroupExpanded,
+        onClick: () => {
+          // isAnimating flag allows us to prevent another dispatch
+          // happening while an animation is taking place.
+          if (!isAnimating.current) {
+            if (state.shouldAnimate) {
+              isAnimating.current = true
+              setTimeout(() => {
+                console.log('end')
+                isAnimating.current = false
+              }, 250)
+            }
+
+            if (index === state.currentFocusedImageIndex) {
+              dispatch({
+                type: ImageGroup.actions.toggleCloseAnimate,
+              })
+            } else {
+              dispatch({
+                type:
+                  state.currentFocusedImageIndex === null
+                    ? ImageGroup.actions.toggleExpandAnimate
+                    : ImageGroup.actions.toggleExpand,
+                payload: {
+                  id: index,
+                },
+              })
+            }
+          }
+        },
+      })
+  )
+
+  React.useEffect(() => {
+    if (state.isImageGroupExpanded) {
+      console.log('toggle event listeners')
+    } else {
+      console.log('remove event listeners')
+    }
+  }, [state.isImageGroupExpanded])
 
   console.log('state', state)
 
-  /**
-   * Returns the updated children with props passed to all nested <Image />
-   * and the number of <Image /> components nested.
-   */
-  const { updatedChildren, count } = mapPropsToChildren(
-    children,
-
-    (child: React.ReactNode, index: number) => {
-      // @ts-ignore
-      return React.cloneElement(child, {
-        'data-fullscreen': index,
-        isFocused: state.currentFocusedImageIndex === index,
-        hasAnimatedZoomAlready: state.hasAnimatedZoomAlready,
-        onClick: () =>
-          dispatch({
-            type:
-              state.currentFocusedImageIndex !== null
-                ? ImageGroup.actions.toggleExpandImage
-                : ImageGroup.actions.toggleExpandImageAnimate,
-            payload: {
-              index,
-            },
-          }),
-      })
-    }
-  )
-
-  return updatedChildren
-}
-
-export function Image({
-  src,
-  alt,
-  ...props
-}: {
-  src: string
-  alt: string
-}): any {
-  // @ts-ignore
-  const { onClick, isFocused, hasAnimatedZoomAlready, ...rest } = props
-  const isCurrentlyFocused = React.useRef(false)
-
-  const initialRender = React.useRef(false)
-  React.useEffect(() => {
-    if (initialRender.current) {
-      if (isFocused) {
-        isCurrentlyFocused.current = true
-        if (hasAnimatedZoomAlready) {
-          // Immediately show
-          console.log('immediately show')
-        } else {
-          // Animate in
-          console.log('animate in')
-        }
-      } else {
-        if (isCurrentlyFocused.current) {
-          if (hasAnimatedZoomAlready) {
-            // Immediately hide
-            console.log('immediately hide')
-          } else {
-            // Animate out
-            console.log('animate out')
-          }
-
-          isCurrentlyFocused.current = false
-        }
-      }
-    } else {
-      initialRender.current = true
-    }
-  }, [isFocused, hasAnimatedZoomAlready])
-
   return (
     <div
+      className={`fullscreen-group${
+        state.isImageGroupExpanded ? ' fullscreen-group--expanded' : ''
+      }`}
       style={{
-        position: 'absolute',
-        top: '0',
-        left: '0',
-        right: '0',
-        bottom: '0',
+        transition: `opacity 250ms ease`,
       }}
-      {...rest}
     >
+      {updatedChildren}
+      {state.currentFocusedImageIndex !== null && (
+        <>
+          {state.currentFocusedImageIndex - 1 !== -1 && (
+            <button
+              className="fullscreen-toggle toggle--left"
+              onClick={() => {
+                dispatch({
+                  type: ImageGroup.actions.toggleExpand,
+                  payload: {
+                    // @ts-ignore
+                    id: state.currentFocusedImageIndex - 1,
+                  },
+                })
+              }}
+              tabIndex={state.isImageGroupExpanded ? 0 : -1}
+              aria-label="Show previous photo"
+            >
+              <Arrow direction="left" />
+            </button>
+          )}
+          {state.currentFocusedImageIndex + 1 !== numberOfImageChildren && (
+            <button
+              className="fullscreen-toggle toggle--right"
+              onClick={() => {
+                dispatch({
+                  type: ImageGroup.actions.toggleExpand,
+                  payload: {
+                    // @ts-ignore
+                    id: state.currentFocusedImageIndex + 1,
+                  },
+                })
+              }}
+              tabIndex={state.isImageGroupExpanded ? 0 : -1}
+              aria-label="Show next photo"
+            >
+              <Arrow direction="right" />
+            </button>
+          )}
+        </>
+      )}
+    </div>
+  )
+}
+
+ImageGroup.actions = {
+  toggleExpand: 'TOGGLE_EXPAND',
+  toggleExpandAnimate: 'TOGGLE_EXPAND_ANIMATE',
+  toggleCloseAnimate: 'TOGGLE_CLOSE_ANIMATE',
+}
+
+export function Image({ src, alt, style, ...props }: ImageProps) {
+  const {
+    onClick,
+    isFocused,
+    shouldAnimate,
+    isImageGroupExpanded,
+    ...rest
+  } = props
+
+  const scalingImage = React.useRef<HTMLDivElement>(null)
+  const wasPreviouslyFocused = React.useRef(false)
+  const initialRender = React.useRef(false)
+  React.useEffect(() => {
+    if (!initialRender.current) {
+      initialRender.current = true
+      return
+    }
+
+    const element = scalingImage.current
+    if (element) {
+      if (isFocused) {
+        if (shouldAnimate) {
+          console.log('animate in', element)
+          calculatePosition('open')(element, 250)
+        } else {
+          console.log('immediately show')
+          calculatePosition('open')(element, 0)
+        }
+
+        wasPreviouslyFocused.current = true
+      }
+
+      if (!isFocused && wasPreviouslyFocused.current) {
+        if (shouldAnimate) {
+          console.log('animate out')
+          calculatePosition('close')(element, 250)
+        } else {
+          console.log('immediately hide')
+          calculatePosition('close')(element, 0)
+        }
+
+        wasPreviouslyFocused.current = false
+      }
+    }
+  }, [isFocused, shouldAnimate])
+
+  return (
+    <div className="fullscreen-container" {...rest}>
       <button
+        className="fullscreen-btn"
         onClick={onClick}
-        style={{
-          border: 'none',
-          background: 'none',
-          position: 'inherit',
-          top: 'inherit',
-          left: 'inherit',
-          right: 'inherit',
-          bottom: 'inherit',
-          height: '100%',
-          width: '100%',
-          padding: '0',
-          WebkitAppearance: 'none',
-          cursor: 'pointer',
-        }}
+        tabIndex={isFocused || !isImageGroupExpanded ? 0 : -1}
       >
-        <img src={src} alt={alt} />
+        <div className="fullscreen-image">
+          <img src={src} alt={alt} style={style} />
+        </div>
+        <div ref={scalingImage} className="fullscreen-image">
+          <img src={src} alt={alt} style={style} />
+        </div>
       </button>
     </div>
   )
 }
 
+Image.displayName = 'Image'
+
+/** mapPropsToChildren
+ *  This function takes the children of an ImageGroup
+ *  component and recursively maps through each children,
+ *  applying props to all Image components.
+ */
 function mapPropsToChildren(
   children: React.ReactNode,
-  fn: (child: React.ReactNode, index: number) => React.ReactNode
-): {
-  updatedChildren: React.ReactNode
-  count: number
-} {
-  let count = 0
+  fnToApplyToChild: (child: any, index: number) => React.ReactNode
+) {
+  let numberOfImageChildren = 0
 
-  function recursiveMap(children: React.ReactNode): React.ReactNode {
+  const recursiveMap = (children: React.ReactNode): React.ReactNode => {
     return React.Children.map(children, child => {
       // @ts-ignore
       if (child.type.displayName === Image.displayName) {
-        child = fn(child, count)
-        count++
+        child = fnToApplyToChild(child, numberOfImageChildren)
+        numberOfImageChildren++
         return child
       }
 
@@ -169,6 +265,7 @@ function mapPropsToChildren(
 
       // @ts-ignore
       if (child.props.children) {
+        // @ts-ignore
         child = React.cloneElement(child, {
           // @ts-ignore
           children: recursiveMap(child.props.children),
@@ -183,12 +280,90 @@ function mapPropsToChildren(
 
   return {
     updatedChildren,
-    count,
+    numberOfImageChildren,
   }
 }
 
-ImageGroup.actions = {
-  toggleExpandImageAnimate: 'TOGGLE_EXPAND_IMAGE_ANIMATE',
-  toggleExpandImage: 'TOGGLE_EXPAND_IMAGE',
+function calculatePosition(action: 'open' | 'close') {
+  return function calculate(el: HTMLDivElement, transitionMs: number = 0) {
+    if (action === 'open') {
+      // 1. Determine whether we are scaling by height or width.
+      //    We will scale based on which ever one is smaller.
+      // 2. translateX the element to the center of the screen always.
+      // 3. If we are scaling by height, translateY based on
+      //    the viewport's top / 0px.
+      // 4. If we are scaling by width, translateY based on the center
+      //    of the viewport height (window.innerHeight / 2)
+      const { innerWidth, innerHeight } = window
+      const { height, width, top, left } = el.getBoundingClientRect()
+      const scaleBy = innerWidth < innerHeight ? 'width' : 'height'
+      const scale =
+        scaleBy === 'width' ? innerWidth / width : innerHeight / height
+
+      // Calculate translateX to center of x axis.
+      const scaledImageWidth = width * scale
+      const leftOfWhereScaledImageNeedsToBe =
+        innerWidth / 2 - scaledImageWidth / 2
+      const leftOfWhereScaledImageIs = left - (scaledImageWidth - width) / 2
+
+      const translateX =
+        (leftOfWhereScaledImageNeedsToBe - leftOfWhereScaledImageIs) / scale
+      let translateY: number = 0
+
+      if (scaleBy === 'width') {
+        const scaledImageHeight = height * scale
+        const centerOfScreen = innerHeight / 2
+
+        const topOfWhereImageShouldBe = centerOfScreen - scaledImageHeight / 2
+
+        translateY = (topOfWhereImageShouldBe - top) / scale
+      } else {
+        translateY = (top / scale) * -1
+      }
+
+      el.style.opacity = '1'
+      el.style.transform = `scale(${scale}) translate3d(${translateX}px, ${translateY}px, 0px)`
+      el.style.transition = `transform ${transitionMs}ms ease, opacity 0ms`
+      el.style.transformOrigin = '50% 0'
+      el.style.zIndex = '9'
+      el.style.pointerEvents = 'initial'
+      el.style.touchAction = 'initial'
+
+      return
+    }
+
+    if (action === 'close') {
+      el.style.opacity = '0'
+      el.style.transform = `scale(1) translate3d(0px, 0px, 0px)`
+      el.style.transition = `transform ${transitionMs}ms ease, opacity 0ms ease ${transitionMs}ms, z-index 0ms ease ${transitionMs}ms`
+      el.style.transformOrigin = '50% 0'
+      el.style.zIndex = '-1'
+      el.style.pointerEvents = 'none'
+      el.style.touchAction = 'none'
+
+      return
+    }
+  }
 }
-Image.displayName = 'Image'
+
+function Arrow({ direction = 'right' }: { direction: 'left' | 'right' }) {
+  return direction === 'right' ? (
+    <svg width="20" height="34" xmlns="http://www.w3.org/2000/svg">
+      <path
+        d="M18.3523845 18.5841646L4.77482194 32.343229c-.86369698.8756947-2.26403359.8756947-3.12731127 0-.86334756-.8749156-.86334756-2.2939446 0-3.1687894L13.6615574 16.9997698 1.6478601 4.82552501c-.86334757-.87526972-.86334757-2.29415709 0-3.16907271.86334755-.87526973 2.26361428-.87526973 3.12731126 0L18.3527339 15.4157292C18.7844077 15.8533995 19 16.4264076 19 16.999699c0 .5735747-.2160116 1.1470077-.6476155 1.5844656z"
+        fill-rule="nonzero"
+        stroke="#484848"
+        fill="rgba(255,255,255,.5)"
+      />
+    </svg>
+  ) : (
+    <svg width="20" height="34" xmlns="http://www.w3.org/2000/svg">
+      <path
+        d="M1.6476155 18.5841646L15.22517806 32.343229c.86369698.8756947 2.26403359.8756947 3.12731127 0 .86334756-.8749156.86334756-2.2939446 0-3.1687894L6.3384426 16.9997698 18.3521399 4.82552501c.86334757-.87526972.86334757-2.29415709 0-3.16907271-.86334755-.87526973-2.26361428-.87526973-3.12731126 0L1.6472661 15.4157292C1.2155923 15.8533995 1 16.4264076 1 16.999699c0 .5735747.2160116 1.1470077.6476155 1.5844656z"
+        fill-rule="nonzero"
+        stroke="#484848"
+        fill="rgba(255,255,255,.5)"
+      />
+    </svg>
+  )
+}

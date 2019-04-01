@@ -1,0 +1,70 @@
+div.fullscreen-group {
+  position: relative;
+}
+div.fullscreen-group::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+  background: #fff;
+  opacity: 0;
+  transition: inherit;
+}
+div.fullscreen-group.is-showing::before {
+  opacity: 0.9;
+  z-index: 1;
+}
+
+div.fullscreen-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+button.fullscreen-btn {
+  border: none;
+  background: none;
+  position: inherit;
+  top: inherit;
+  left: inherit;
+  right: inherit;
+  bottom: inherit;
+  height: 100%;
+  width: 100%;
+  padding: 0;
+  -webkit-appearance: none;
+  cursor: zoom-in;
+  outline: none;
+}
+button.fullscreen-btn.fullscreen-btn--focused {
+  cursor: zoom-out;
+}
+
+div.fullscreen-img-container {
+  position: absolute;
+  top: inherit;
+  left: inherit;
+  right: inherit;
+  bottom: inherit;
+  height: inherit;
+  width: inherit;
+}
+
+div.fullscreen-img-container.fullscreen-img--medium {
+  opacity: 1;
+}
+
+div.fullscreen-img-container.fullscreen-img--large {
+  opacity: 0;
+  visibility: hidden;
+}
+
+div.fullscreen-img-container.fullscreen-img--large::before {
+  content: '';
+  position: fixed;
+}

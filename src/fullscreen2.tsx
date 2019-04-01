@@ -1,148 +1,263 @@
 import React from 'react'
+import './fullscreen.css'
 
+// Type definitions
+// ================
 type ImageGroupState = {
-  currentExpandedImageIndex: number | null
-  numberOfChildImageComponents: any
+  currentFocusedImageIndex: number | null
+  hasAnimatedZoomAlready: boolean
 }
 
 function reducer(
   state: ImageGroupState,
-  action: { type: string; payload: any }
+  action: {
+    type: string
+    payload?: any
+  }
 ): ImageGroupState {
   switch (action.type) {
     case ImageGroup.actions.toggleExpandImage:
       return {
         ...state,
-        currentExpandedImageIndex: action.payload.id,
+        hasAnimatedZoomAlready: true,
+        currentFocusedImageIndex: action.payload.index,
+      }
+    case ImageGroup.actions.toggleExpandImageAnimate:
+      return {
+        ...state,
+        currentFocusedImageIndex: action.payload.index,
+      }
+    case ImageGroup.actions.toggleCloseImageAnimate:
+      return {
+        ...state,
+        currentFocusedImageIndex: null,
+        hasAnimatedZoomAlready: false,
       }
     default:
-      throw new Error(`No type of "${action.type}" is defined.`)
+      throw new Error(`No action type of "${action.type}" found.`)
   }
 }
 
-ImageGroup.actions = {
-  toggleExpandImage: 'TOGGLE_EXPAND_IMAGE',
-}
-
-export function ImageGroup({ children }: { children: any }) {
+export function ImageGroup({ children }: { children: React.ReactNode }): any {
   const [state, dispatch] = React.useReducer(reducer, {
-    currentExpandedImageIndex: null,
-    numberOfChildImageComponents: getChildImageComponentsLength(children),
+    currentFocusedImageIndex: null,
+    hasAnimatedZoomAlready: false,
   })
 
-  let index = 0
-  const c = mapPropsToImageComponents(children, child => {
-    // Save index++ in a closure so our onClick can reference the current value.
-    const id = index++
-    // @ts-ignore
-    return React.cloneElement(child, {
-      id,
-      isExpanded: state.currentExpandedImageIndex === id,
-      onClick: (e: React.ChangeEvent) => {
-        dispatch({
-          type: ImageGroup.actions.toggleExpandImage,
-          payload: {
-            id,
-            element: e.target,
-          },
-        })
-      },
-    })
-  })
+  console.log('state', state)
 
-  return <>{c}</>
-}
-
-export function Image({ src, alt, ...props }: { src: string; alt: string }) {
-  // @ts-ignore
-  const { isExpanded, ...rest } = props
-
-  const smallImage = React.useRef<any>()
-  const largeImage = React.useRef<any>()
-
-  const initialRender = React.useRef(false)
-  React.useEffect(() => {
-    // Only run after first render.
-    if (initialRender.current) {
-      if (isExpanded) {
-        console.log('open image', largeImage.current)
-      } else {
-        console.log('close image', largeImage.current)
-      }
-    } else {
-      initialRender.current = true
+  /**
+   * Returns the updated children with props passed to all nested <Image />
+   * and the number of <Image /> components nested.
+   */
+  const { updatedChildren, count } = mapPropsToChildren(
+    children,
+    (child: React.ReactNode, index: number) => {
+      // @ts-ignore
+      return React.cloneElement(child, {
+        'data-fullscreen-id': index,
+        isFocused: state.currentFocusedImageIndex === index,
+        hasAnimatedZoomAlready: state.hasAnimatedZoomAlready,
+        isFullScreenMode: state.currentFocusedImageIndex !== null,
+        onClick: () => {
+          if (index === state.currentFocusedImageIndex) {
+            dispatch({
+              type: ImageGroup.actions.toggleCloseImageAnimate,
+            })
+          } else {
+            dispatch({
+              type:
+                state.currentFocusedImageIndex !== null
+                  ? ImageGroup.actions.toggleExpandImage
+                  : ImageGroup.actions.toggleExpandImageAnimate,
+              payload: {
+                index,
+              },
+            })
+          }
+        },
+      })
     }
-  }, [isExpanded])
+  )
 
   return (
-    <button
+    <div
+      className={`fullscreen-group${
+        state.currentFocusedImageIndex !== null ? ' is-showing' : ''
+      }`}
       style={{
-        border: 'none',
-        background: 'none',
-        position: 'absolute',
-        top: '0',
-        left: '0',
-        right: '0',
-        bottom: '0',
-        height: '100%',
-        width: '100%',
-        padding: '0',
-        WebkitAppearance: 'none',
-        cursor: 'pointer',
+        transition: `opacity 400ms ease 50ms`,
       }}
-      {...rest}
     >
-      <img ref={smallImage} src={src} alt={alt} style={{ zIndex: -1 }} />
-      <img
-        ref={largeImage}
-        src={src}
-        alt={alt}
-        style={{ opacity: 0, zIndex: -1 }}
-      />
-    </button>
+      {updatedChildren}
+    </div>
   )
 }
 
-ImageGroup.displayName = 'ImageGroup'
-Image.displayName = 'Image'
-
-// Recursively checks children and maps props to all <Image /> components.
-function mapPropsToImageComponents(
-  children: React.ReactNode,
-  fn: (child: React.ReactNode) => any
-): React.ReactNode {
-  return React.Children.map(children, child => {
+export function Image({
+  src,
+  alt,
+  ...props
+}: {
+  src: string
+  alt: string
+}): any {
+  const {
     // @ts-ignore
-    if (child.type.displayName === 'Image') {
-      // @ts-ignore
-      child = fn(child)
-      return child
-    }
-
-    if (!React.isValidElement(child)) {
-      return child
-    }
-
+    onClick,
     // @ts-ignore
-    if (child.props.children) {
-      child = React.cloneElement(child, {
-        // @ts-ignore
-        children: mapPropsToImageComponents(child.props.children, fn),
-      })
+    isFocused,
+    // @ts-ignore
+    hasAnimatedZoomAlready,
+    // @ts-ignore
+    isFullScreenMode,
+    ...rest
+  } = props
+  const isCurrentlyFocused = React.useRef(false)
+
+  const container = React.useRef<HTMLDivElement | null>(null)
+
+  const initialRender = React.useRef(false)
+  React.useEffect(() => {
+    if (!initialRender.current) {
+      initialRender.current = true
+      return
     }
 
-    return child
-  })
+    if (isFocused && container.current) {
+      isCurrentlyFocused.current = true
+      if (hasAnimatedZoomAlready) {
+        // Immediately show
+        toggle('open', container.current, 0)
+      } else {
+        // Animate in
+        toggle('open', container.current, 400)
+      }
+    } else if (isCurrentlyFocused.current && container.current) {
+      if (hasAnimatedZoomAlready) {
+        // Immediately hide
+        toggle('close', container.current, 0)
+      } else {
+        // Animate out
+        console.log('animate out')
+        toggle('close', container.current, 400)
+      }
+
+      isCurrentlyFocused.current = false
+    }
+  }, [isFocused, hasAnimatedZoomAlready])
+
+  return (
+    <div ref={container} className="fullscreen-container" {...rest}>
+      <button
+        tabIndex={isFullScreenMode && !isFocused ? -1 : 0}
+        className={`fullscreen-btn${
+          isFocused ? ' fullscreen-btn--focused' : ''
+        }`}
+        onClick={onClick}
+      >
+        <div className="fullscreen-img-container fullscreen-img--medium">
+          <img src={src} alt={alt} />
+        </div>
+        <div
+          data-image-large=""
+          className="fullscreen-img-container fullscreen-img--large"
+        >
+          <img src={src} alt={alt} />
+        </div>
+      </button>
+    </div>
+  )
 }
 
-function getChildImageComponentsLength(children: React.ReactNode) {
-  let imageComponents: number = 0
+function toggle(
+  type: 'open' | 'close',
+  el: HTMLDivElement,
+  transitionMs: number = 400
+) {
+  const image = el.querySelector('[data-image-large]')
 
-  function count(children: React.ReactNode): any {
+  if (type === 'open') {
+    // @ts-ignore
+    const { top, left, width, height } = image.getBoundingClientRect()
+    const { innerHeight, innerWidth } = window
+    // 1. Should we scale based on the viewport height or width?
+    //    We need to scale based on the smaller of the two:
+    //    If viewport width is smaller than height, we'll scale the image's width.
+    //    If viewport height is smaller than width, we'll scale the image's height.
+    const direction = innerHeight > innerWidth ? 'width' : 'height'
+
+    const baseDimension = direction === 'width' ? innerWidth : innerHeight
+    const imageDimension = direction === 'width' ? width : height
+    const scale = baseDimension / imageDimension
+    let translateY: number = 0
+    let translateX: number = 0
+
+    if (direction === 'width') {
+    } else {
+      const scaledImageSize = width * scale
+      translateY = (top / scale) * -1
+      console.log('translateY', translateY, 'top', top, 'height', height)
+      // Position of scaled image to be centered horizontally in the viewport.
+      const leftOfWhereScaledImageNeedsToBe =
+        innerWidth / 2 - scaledImageSize / 2
+      const leftOfScaledImage = left - (scaledImageSize - width) / 2
+      translateX = (leftOfWhereScaledImageNeedsToBe - leftOfScaledImage) / scale
+    }
+
+    // @ts-ignore
+    image.style.opacity = '1'
+    // @ts-ignore
+    image.style.visibility = 'initial'
+    // @ts-ignore
+    image.style.zIndex = 9
+    // @ts-ignore
+    image.style.transform = `scale(${scale}) translate3d(${translateX}px, ${translateY}px, 0)`
+    // @ts-ignore
+    image.style.transformOrigin = '50% 0'
+    // @ts-ignore
+    image.style.transition = `transform ${transitionMs}ms ease, opacity ${transitionMs}ms ease`
+  } else {
+    // @ts-ignore
+    image.style.opacity = '0'
+    // @ts-ignore
+    image.style.transform = `scale(1) translate3d(0, 0, 0)`
+    // @ts-ignore
+    image.style.transformOrigin = '50% 0'
+    // @ts-ignore
+    image.style.transition = `transform ${transitionMs}ms ease, opacity ${transitionMs}ms ease ${transitionMs}ms`
+
+    if (transitionMs === 0) {
+      // @ts-ignore
+      image.style.visibility = 'hidden'
+      // @ts-ignore
+      image.style.zIndex = '-1'
+    } else {
+      setTimeout(() => {
+        // @ts-ignore
+        image.style.visibility = 'hidden'
+        // @ts-ignore
+        image.style.zIndex = '-1'
+      }, transitionMs)
+    }
+  }
+}
+
+function mapPropsToChildren(
+  children: React.ReactNode,
+  fn: (child: React.ReactNode, index: number) => React.ReactNode
+): {
+  updatedChildren: React.ReactNode
+  count: number
+} {
+  let count = 0
+
+  function recursiveMap(children: React.ReactNode): React.ReactNode {
     return React.Children.map(children, child => {
       // @ts-ignore
-      if (child.type.displayName === 'Image') {
-        imageComponents++
+      if (child.type.displayName === Image.displayName) {
+        child = fn(child, count)
+        count++
         return child
       }
 
@@ -154,7 +269,7 @@ function getChildImageComponentsLength(children: React.ReactNode) {
       if (child.props.children) {
         child = React.cloneElement(child, {
           // @ts-ignore
-          children: count(child.props.children),
+          children: recursiveMap(child.props.children),
         })
       }
 
@@ -162,6 +277,17 @@ function getChildImageComponentsLength(children: React.ReactNode) {
     })
   }
 
-  count(children)
-  return imageComponents
+  const updatedChildren = recursiveMap(children)
+
+  return {
+    updatedChildren,
+    count,
+  }
 }
+
+ImageGroup.actions = {
+  toggleExpandImageAnimate: 'TOGGLE_EXPAND_IMAGE_ANIMATE',
+  toggleExpandImage: 'TOGGLE_EXPAND_IMAGE',
+  toggleCloseImageAnimate: 'TOGGLE_CLOSE_IMAGE_ANIMATE',
+}
+Image.displayName = 'Image'
