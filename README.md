@@ -1,5 +1,5 @@
 <h1 align="center">
-  React Fullscreen Images 
+  React Fullscreen Image
 </h1>
 <p align="center">
   🔲
@@ -14,7 +14,7 @@
 
 You've got a list of images that you want to allow users to click and expand into fullscreen mode.
 
-React Fullscreen Images is a tiny library to render images that animate to fullscreen view when
+React Fullscreen Image is a tiny library to render images that animate to fullscreen view when
 clicked.
 
 ## Features
@@ -27,7 +27,7 @@ clicked.
 
 ## Usage
 
-React Fullscreen Images uses [compound components](https://kentcdodds.com/blog/compound-components-with-react-hooks). All `<Image />` components nested within an `<ImageGroup />` will be navigatable when in fullscreen mode.
+React Fullscreen Image uses [compound components](https://kentcdodds.com/blog/compound-components-with-react-hooks). All `<Image />` components nested within an `<ImageGroup />` will be navigatable when in fullscreen mode.
 
 ```jsx
 import { ImageGroup, Image } from 'react-fullscreen-images'
@@ -75,9 +75,9 @@ export default function App() {
 ## Installation
 
 ```jsx
-git clone https://github.com/timc1/react-fullscreen-images.git
+git clone https://github.com/timc1/react-fullscreen-image.git
 
-cd react-fullscreen-images/example
+cd react-fullscreen-image/example
 
 yarn install
 
