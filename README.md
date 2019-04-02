@@ -16,7 +16,7 @@ clicked.
 - Keyboard event handlers (escape key, left/right arrow navigation).
 - Handles outer click — anywhere outside of image when clicked will zoom image to its original
   position.
-- Scrolling, (with requestAnimationFrame) to a set boundary will zoom image to its original position.
+- Scrolling (with requestAnimationFrame) to a set boundary will zoom image to its original position.
 
 <p align="center">
 <img src="demo.gif" alt="demo" />
@@ -27,6 +27,8 @@ clicked.
 React Fullscreen Images uses [compound components](https://kentcdodds.com/blog/compound-components-with-react-hooks). All `<Image />` components nested within an `<ImageGroup />` will be navigatable when in fullscreen mode.
 
 ```jsx
+import { ImageGroup, Image } from 'react-fullscreen-images'
+
 const images = [
   'https://unsplash.com/photos/Bkci_8qcdvQ',
   'https://unsplash.com/photos/hS46bsAASwQ',
