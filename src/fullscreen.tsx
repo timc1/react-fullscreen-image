@@ -9,7 +9,7 @@ type ImageGroupProps = {
 }
 
 type ImageGroupStateTypes = {
-  currentFocusedImageIndex: null | number
+  currentFocusedImageIndex: number
   isImageGroupExpanded: boolean
   shouldAnimate: boolean
 }
@@ -48,7 +48,7 @@ function reducer(
     case ImageGroup.actions.toggleCloseAnimate:
       return {
         ...state,
-        currentFocusedImageIndex: null,
+        currentFocusedImageIndex: -1,
         isImageGroupExpanded: false,
         shouldAnimate: true,
       }
@@ -61,7 +61,7 @@ export function ImageGroup({ children }: ImageGroupProps): any {
   const isAnimating = React.useRef(false)
 
   const [state, dispatch] = React.useReducer(reducer, {
-    currentFocusedImageIndex: null,
+    currentFocusedImageIndex: -1,
     isImageGroupExpanded: false,
     shouldAnimate: true,
   })
@@ -92,7 +92,7 @@ export function ImageGroup({ children }: ImageGroupProps): any {
             } else {
               dispatch({
                 type:
-                  state.currentFocusedImageIndex === null
+                  state.currentFocusedImageIndex === -1
                     ? ImageGroup.actions.toggleExpandAnimate
                     : ImageGroup.actions.toggleExpand,
                 payload: {
@@ -115,8 +115,9 @@ export function ImageGroup({ children }: ImageGroupProps): any {
         })
       }
     }
+
     let keyDownListener = (e: any) => {
-      if (state.currentFocusedImageIndex !== null) {
+      if (state.currentFocusedImageIndex !== -1) {
         if (e.key === 'Escape') {
           dispatch({
             type: ImageGroup.actions.toggleCloseAnimate,
@@ -159,19 +160,29 @@ export function ImageGroup({ children }: ImageGroupProps): any {
       }
     }
 
+    let resizeListener = () => {
+      dispatch({
+        type: ImageGroup.actions.toggleCloseAnimate,
+      })
+      window.removeEventListener('resize', resizeListener)
+    }
+
     if (state.isImageGroupExpanded) {
       console.log('toggle event listeners')
       window.addEventListener(clickEvent, clickListener)
       window.addEventListener('keydown', keyDownListener)
+      window.addEventListener('resize', resizeListener)
     } else {
       console.log('remove event listeners')
       window.removeEventListener(clickEvent, clickListener)
       window.removeEventListener('keydown', keyDownListener)
+      window.removeEventListener('resize', resizeListener)
     }
 
     return () => {
       window.removeEventListener(clickEvent, clickListener)
       window.removeEventListener('keydown', keyDownListener)
+      window.removeEventListener('resize', resizeListener)
     }
   }, [
     state.isImageGroupExpanded,
@@ -192,7 +203,7 @@ export function ImageGroup({ children }: ImageGroupProps): any {
       }}
     >
       {updatedChildren}
-      {state.currentFocusedImageIndex !== null && (
+      {state.currentFocusedImageIndex !== -1 && (
         <>
           <button
             className="fullscreen-exit-btn"
@@ -205,42 +216,42 @@ export function ImageGroup({ children }: ImageGroupProps): any {
           >
             <ExitIcon />
           </button>
-          {state.currentFocusedImageIndex - 1 !== -1 && (
-            <button
-              className="fullscreen-toggle toggle--left"
-              onClick={() => {
-                dispatch({
-                  type: ImageGroup.actions.toggleExpand,
-                  payload: {
-                    // @ts-ignore
-                    id: state.currentFocusedImageIndex - 1,
-                  },
-                })
-              }}
-              tabIndex={state.isImageGroupExpanded ? 0 : -1}
-              aria-label="Show previous photo"
-            >
-              <Arrow direction="left" />
-            </button>
-          )}
-          {state.currentFocusedImageIndex + 1 !== numberOfImageChildren && (
-            <button
-              className="fullscreen-toggle toggle--right"
-              onClick={() => {
-                dispatch({
-                  type: ImageGroup.actions.toggleExpand,
-                  payload: {
-                    // @ts-ignore
-                    id: state.currentFocusedImageIndex + 1,
-                  },
-                })
-              }}
-              tabIndex={state.isImageGroupExpanded ? 0 : -1}
-              aria-label="Show next photo"
-            >
-              <Arrow direction="right" />
-            </button>
-          )}
+          <button
+            className="fullscreen-toggle toggle--left"
+            onClick={() => {
+              dispatch({
+                type: ImageGroup.actions.toggleExpand,
+                payload: {
+                  id:
+                    state.currentFocusedImageIndex - 1 !== -1
+                      ? state.currentFocusedImageIndex - 1
+                      : numberOfImageChildren - 1,
+                },
+              })
+            }}
+            tabIndex={state.isImageGroupExpanded ? 0 : -1}
+            aria-label="Show previous photo"
+          >
+            <Arrow direction="left" />
+          </button>
+          <button
+            className="fullscreen-toggle toggle--right"
+            onClick={() => {
+              dispatch({
+                type: ImageGroup.actions.toggleExpand,
+                payload: {
+                  id:
+                    state.currentFocusedImageIndex + 1 !== numberOfImageChildren
+                      ? state.currentFocusedImageIndex + 1
+                      : 0,
+                },
+              })
+            }}
+            tabIndex={state.isImageGroupExpanded ? 0 : -1}
+            aria-label="Show next photo"
+          >
+            <Arrow direction="right" />
+          </button>
         </>
       )}
     </div>
