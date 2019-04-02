@@ -1,0 +1,97 @@
+div.fullscreen-group {
+  position: relative;
+}
+div.fullscreen-group::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.9);
+  z-index: 1;
+  pointer-events: none;
+  touch-action: none;
+  opacity: 0;
+  transition: inherit;
+}
+div.fullscreen-group.fullscreen-group--expanded::before {
+  opacity: 1;
+  z-index: 1;
+  pointer-events: initial;
+  touch-action: initial;
+}
+div.fullscreen-group.fullscreen-group--expanded button.fullscreen-toggle {
+  opacity: 1;
+}
+div.fullscreen-group.fullscreen-group--expanded button.fullscreen-btn {
+  cursor: zoom-out;
+}
+
+div.fullscreen-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+button.fullscreen-toggle {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  padding: 20px;
+  border: none;
+  background: none;
+  opacity: 0;
+  transition: inherit;
+  cursor: pointer;
+  z-index: 9;
+  transition: background 250ms ease;
+}
+button.fullscreen-toggle:active {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+button.fullscreen-toggle.toggle--left {
+  left: 0;
+}
+button.fullscreen-toggle.toggle--right {
+  right: 0;
+}
+
+button.fullscreen-btn {
+  border: none;
+  background: none;
+  position: inherit;
+  top: inherit;
+  left: inherit;
+  right: inherit;
+  bottom: inherit;
+  height: 100%;
+  width: 100%;
+  padding: 0;
+  -webkit-appearance: none;
+  cursor: zoom-in;
+  outline: none;
+}
+
+button.fullscreen-exit-btn {
+  border: none;
+  background: none;
+  position: fixed;
+  top: 20px;
+  right: 0;
+  padding: 20px;
+  -webkit-appearance: none;
+  cursor: pointer;
+  z-index: 10;
+}
+
+div.fullscreen-image {
+  position: inherit;
+  top: inherit;
+  left: inherit;
+  right: inherit;
+  bottom: inherit;
+}

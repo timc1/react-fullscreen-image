@@ -1,15 +1,31 @@
-import * as React from 'react'
-import {
-  ImageGroupProps,
-  ImageGroupStateTypes,
-  ImageGroupActionTypes,
-  ImageProps,
-} from '../index.d'
-
+import React from 'react'
 import './fullscreen.css'
 
 // For touch devices, we don't want to listen to click events but rather touchstart.
 const clickEvent = isMobile() ? 'touchstart' : 'click'
+
+type ImageGroupProps = {
+  transitionMs?: number
+  children: React.ReactNode
+}
+
+type ImageGroupStateTypes = {
+  currentFocusedImageIndex: number
+  isImageGroupExpanded: boolean
+  shouldAnimate: boolean
+}
+
+type ImageGroupActionTypes = {
+  type: string
+  payload?: any
+}
+
+type ImageProps = {
+  src: string
+  alt: string
+  style?: object
+  [k: string]: any
+}
 
 function reducer(
   state: ImageGroupStateTypes,

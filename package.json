@@ -1,36 +1,23 @@
 {
-  "name": "react-custom-fullscreen",
-  "version": "0.1.0",
-  "private": true,
-  "dependencies": {
+  "name": "react-fullscreen-images",
+  "version": "0.0.1",
+  "description": "An accessible, fast, and animated fullscreen React image viewer.",
+  "main": "lib/index.js",
+  "repository": "git@github.com:timc1/react-fullscreen-images.git",
+  "author": "Tim Chang <timchang.tcc@gmail.com> (https://timcchang.com)",
+  "license": "MIT",
+  "scripts": {
+    "build": "rm -rf ./lib && tsc && cp ./src/fullscreen.css ./lib"
+  },
+  "peerDependencies": {
+    "react": "^16.8.x",
+    "react-dom": "^16.8.x",
+    "typescript": "^3.3.3333"
+  },
+  "devDependencies": {
     "@types/jest": "24.0.11",
     "@types/node": "11.12.1",
     "@types/react": "16.8.10",
-    "@types/react-dom": "16.8.3",
-    "react": "^16.8.6",
-    "react-dom": "^16.8.6",
-    "react-scripts": "2.1.8",
-    "typescript": "3.4.1"
-  },
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
-  },
-  "eslintConfig": {
-    "extends": "react-app"
-  },
-  "browserslist": [
-    ">0.2%",
-    "not dead",
-    "not ie <= 11",
-    "not op_mini all"
-  ],
-  "devDependencies": {
-    "@typescript-eslint/parser": "^1.5.0",
-    "eslint-config-react-app": "^3.0.8",
-    "eslint-config-prettier": "^4.1.0",
-    "eslint-plugin-react-hooks": "^1.6.0"
+    "@types/react-dom": "16.8.3"
   }
 }

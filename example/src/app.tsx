@@ -11,7 +11,7 @@ import image7 from './assets/images/unsplash_image_7.jpeg'
 import image8 from './assets/images/unsplash_image_8.jpeg'
 import image9 from './assets/images/unsplash_image_9.jpeg'
 
-import { ImageGroup, Image } from './fullscreen'
+import { ImageGroup, Image } from 'react-fullscreen-images'
 
 const images = [
   image1,
