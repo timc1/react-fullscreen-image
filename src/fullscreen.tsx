@@ -1,6 +1,9 @@
 import React from 'react'
 import './fullscreen2.css'
 
+// For touch devices, we don't want to listen to click events but rather touchstart.
+const clickEvent = isMobile() ? 'touchstart' : 'click'
+
 type ImageGroupProps = {
   children: React.ReactNode
 }
@@ -78,7 +81,6 @@ export function ImageGroup({ children }: ImageGroupProps): any {
             if (state.shouldAnimate) {
               isAnimating.current = true
               setTimeout(() => {
-                console.log('end')
                 isAnimating.current = false
               }, 250)
             }
@@ -103,18 +105,85 @@ export function ImageGroup({ children }: ImageGroupProps): any {
       })
   )
 
+  // Effect to attach and remove event listeners.
   React.useEffect(() => {
+    // Handles outer click to exit out of image
+    let clickListener = (e: any) => {
+      if (e.target.hasAttribute('data-fullscreen-group')) {
+        dispatch({
+          type: ImageGroup.actions.toggleCloseAnimate,
+        })
+      }
+    }
+    let keyDownListener = (e: any) => {
+      if (state.currentFocusedImageIndex !== null) {
+        if (e.key === 'Escape') {
+          dispatch({
+            type: ImageGroup.actions.toggleCloseAnimate,
+          })
+        }
+        if (e.key === 'ArrowRight') {
+          if (state.currentFocusedImageIndex + 1 === numberOfImageChildren) {
+            dispatch({
+              type: ImageGroup.actions.toggleExpand,
+              payload: {
+                id: 0,
+              },
+            })
+          } else {
+            dispatch({
+              type: ImageGroup.actions.toggleExpand,
+              payload: {
+                id: state.currentFocusedImageIndex + 1,
+              },
+            })
+          }
+        }
+        if (e.key === 'ArrowLeft') {
+          if (state.currentFocusedImageIndex - 1 === -1) {
+            dispatch({
+              type: ImageGroup.actions.toggleExpand,
+              payload: {
+                id: numberOfImageChildren - 1,
+              },
+            })
+          } else {
+            dispatch({
+              type: ImageGroup.actions.toggleExpand,
+              payload: {
+                id: state.currentFocusedImageIndex - 1,
+              },
+            })
+          }
+        }
+      }
+    }
+
     if (state.isImageGroupExpanded) {
       console.log('toggle event listeners')
+      window.addEventListener(clickEvent, clickListener)
+      window.addEventListener('keydown', keyDownListener)
     } else {
       console.log('remove event listeners')
+      window.removeEventListener(clickEvent, clickListener)
+      window.removeEventListener('keydown', keyDownListener)
     }
-  }, [state.isImageGroupExpanded])
+
+    return () => {
+      window.removeEventListener(clickEvent, clickListener)
+      window.removeEventListener('keydown', keyDownListener)
+    }
+  }, [
+    state.isImageGroupExpanded,
+    numberOfImageChildren,
+    state.currentFocusedImageIndex,
+  ])
 
   console.log('state', state)
 
   return (
     <div
+      data-fullscreen-group=""
       className={`fullscreen-group${
         state.isImageGroupExpanded ? ' fullscreen-group--expanded' : ''
       }`}
@@ -125,6 +194,17 @@ export function ImageGroup({ children }: ImageGroupProps): any {
       {updatedChildren}
       {state.currentFocusedImageIndex !== null && (
         <>
+          <button
+            className="fullscreen-exit-btn"
+            onClick={() => {
+              dispatch({
+                type: ImageGroup.actions.toggleCloseAnimate,
+              })
+            }}
+            aria-label="Close fullscreen view"
+          >
+            <ExitIcon />
+          </button>
           {state.currentFocusedImageIndex - 1 !== -1 && (
             <button
               className="fullscreen-toggle toggle--left"
@@ -195,10 +275,10 @@ export function Image({ src, alt, style, ...props }: ImageProps) {
     if (element) {
       if (isFocused) {
         if (shouldAnimate) {
-          console.log('animate in', element)
+          // Animate in
           calculatePosition('open')(element, 250)
         } else {
-          console.log('immediately show')
+          // Immediately show
           calculatePosition('open')(element, 0)
         }
 
@@ -207,10 +287,10 @@ export function Image({ src, alt, style, ...props }: ImageProps) {
 
       if (!isFocused && wasPreviouslyFocused.current) {
         if (shouldAnimate) {
-          console.log('animate out')
+          // Animate out
           calculatePosition('close')(element, 250)
         } else {
-          console.log('immediately hide')
+          // Immediately hide
           calculatePosition('close')(element, 0)
         }
 
@@ -346,24 +426,42 @@ function calculatePosition(action: 'open' | 'close') {
   }
 }
 
+function isMobile() {
+  if (typeof document !== `undefined`) {
+    return 'ontouchstart' in document.documentElement === true
+  }
+  return false
+}
+
 function Arrow({ direction = 'right' }: { direction: 'left' | 'right' }) {
   return direction === 'right' ? (
     <svg width="20" height="34" xmlns="http://www.w3.org/2000/svg">
       <path
         d="M18.3523845 18.5841646L4.77482194 32.343229c-.86369698.8756947-2.26403359.8756947-3.12731127 0-.86334756-.8749156-.86334756-2.2939446 0-3.1687894L13.6615574 16.9997698 1.6478601 4.82552501c-.86334757-.87526972-.86334757-2.29415709 0-3.16907271.86334755-.87526973 2.26361428-.87526973 3.12731126 0L18.3527339 15.4157292C18.7844077 15.8533995 19 16.4264076 19 16.999699c0 .5735747-.2160116 1.1470077-.6476155 1.5844656z"
-        fill-rule="nonzero"
-        stroke="#484848"
-        fill="rgba(255,255,255,.5)"
+        fillRule="nonzero"
+        stroke="#000"
+        fill="#fff"
       />
     </svg>
   ) : (
     <svg width="20" height="34" xmlns="http://www.w3.org/2000/svg">
       <path
         d="M1.6476155 18.5841646L15.22517806 32.343229c.86369698.8756947 2.26403359.8756947 3.12731127 0 .86334756-.8749156.86334756-2.2939446 0-3.1687894L6.3384426 16.9997698 18.3521399 4.82552501c.86334757-.87526972.86334757-2.29415709 0-3.16907271-.86334755-.87526973-2.26361428-.87526973-3.12731126 0L1.6472661 15.4157292C1.2155923 15.8533995 1 16.4264076 1 16.999699c0 .5735747.2160116 1.1470077.6476155 1.5844656z"
-        fill-rule="nonzero"
-        stroke="#484848"
-        fill="rgba(255,255,255,.5)"
+        fillRule="nonzero"
+        stroke="#000"
+        fill="#fff"
       />
+    </svg>
+  )
+}
+
+function ExitIcon() {
+  return (
+    <svg width="20" height="20" xmlns="http://www.w3.org/2000/svg">
+      <g fill="#000" fillRule="nonzero" stroke="#000">
+        <path d="M18.6753571 2.08152486l-.6487597-.67476795c-.3578377-.37260221-.9393896-.37260221-1.2979286 0L9.98071429 8.33578453 3.21534416 1.30137569c-.35848052-.37254144-.93974026-.37254144-1.29792858 0l-.64875974.6746464c-.3581883.37272377-.3581883.97644752 0 1.34923205l8.055 8.37634806c.35818832.3729061.93898052.3729061 1.29757793 0l8.05412333-8.27102761c.359065-.37254144.359065-.97650829 0-1.34904973z" />
+        <path d="M18.6753571 17.91847514l-.6487597.67476795c-.3578377.37260221-.9393896.37260221-1.2979286 0l-6.74795451-6.92902762-6.76537013 7.03440884c-.35848052.37254144-.93974026.37254144-1.29792858 0l-.64875974-.6746464c-.3581883-.37272377-.3581883-.97644752 0-1.34923205l8.055-8.37634806c.35818832-.3729061.93898052-.3729061 1.29757793 0l8.05412333 8.27102761c.359065.37254144.359065.97650829 0 1.34904973z" />
+      </g>
     </svg>
   )
 }

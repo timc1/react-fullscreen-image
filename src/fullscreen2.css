@@ -72,6 +72,18 @@ button.fullscreen-btn {
   outline: none;
 }
 
+button.fullscreen-exit-btn {
+  border: none;
+  background: none;
+  position: fixed;
+  top: 20px;
+  right: 0;
+  padding: 20px;
+  -webkit-appearance: none;
+  cursor: pointer;
+  z-index: 10;
+}
+
 div.fullscreen-image {
   position: inherit;
   top: inherit;
