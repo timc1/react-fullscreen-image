@@ -1,8 +1,15 @@
 <h1 align="center">
   React Fullscreen Images 
 </h1>
+<p align="center">
+  🔲
+  </p>
 <p align="center" style="font-size: 1.5rem;">
   A simple, fast, and beautiful fullscreen React image viewer using CSS transforms & opacity.
+</p>
+
+<p align="center">
+<img src="demo.gif" alt="demo" />
 </p>
 
 You've got a list of images that you want to allow users to click and expand into fullscreen mode.
@@ -18,9 +25,7 @@ clicked.
   position.
 - Scrolling (with requestAnimationFrame) to a set boundary will zoom image to its original position.
 
-<p align="center">
-<img src="demo.gif" alt="demo" />
-</p>
+
 
 ## Usage
 
