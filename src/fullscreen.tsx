@@ -351,14 +351,14 @@ function mapPropsToChildren(
 
   const recursiveMap = (children: React.ReactNode): React.ReactNode => {
     return React.Children.map(children, child => {
+      if (!React.isValidElement(child)) {
+        return child
+      }
+
       // @ts-ignore
       if (child.type.displayName === Image.displayName) {
         child = fnToApplyToChild(child, numberOfImageChildren)
         numberOfImageChildren++
-        return child
-      }
-
-      if (!React.isValidElement(child)) {
         return child
       }
 
