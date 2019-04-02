@@ -25,8 +25,6 @@ clicked.
   position.
 - Scrolling (with requestAnimationFrame) to a set boundary will zoom image to its original position.
 
-
-
 ## Usage
 
 React Fullscreen Images uses [compound components](https://kentcdodds.com/blog/compound-components-with-react-hooks). All `<Image />` components nested within an `<ImageGroup />` will be navigatable when in fullscreen mode.
@@ -72,4 +70,16 @@ export default function App() {
     </ImageGroup>
   )
 }
+```
+
+## Installation
+
+```jsx
+git clone https://github.com/timc1/react-fullscreen-images.git
+
+cd react-fullscreen-images/example
+
+yarn install
+
+yarn start
 ```
