@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-<img src="demo.gif" alt="demo" />
+<img src="https://github.com/timc1/react-fullscreen-images/raw/master/demo.gif" alt="demo" />
 </p>
 
 You've got a list of images that you want to allow users to click and expand into fullscreen mode.
