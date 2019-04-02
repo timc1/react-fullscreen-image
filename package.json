@@ -1,5 +1,5 @@
 {
-  "name": "react-fullscreen-images",
+  "name": "react-fullscreen-image",
   "version": "0.0.1",
   "description": "An accessible, fast, and animated fullscreen React image viewer.",
   "keywords": [
@@ -11,7 +11,7 @@
     "css"
   ],
   "main": "lib/index.js",
-  "repository": "git@github.com:timc1/react-fullscreen-images.git",
+  "repository": "git@github.com:timc1/react-fullscreen-image.git",
   "author": "Tim Chang <timchang.tcc@gmail.com> (https://timcchang.com)",
   "license": "MIT",
   "scripts": {

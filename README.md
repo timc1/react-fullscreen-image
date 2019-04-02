@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-<img src="https://github.com/timc1/react-fullscreen-images/raw/master/demo.gif" alt="demo" />
+<img src="https://github.com/timc1/react-fullscreen-image/raw/master/demo.gif" alt="demo" />
 </p>
 
 You've got a list of images that you want to allow users to click and expand into fullscreen mode.
@@ -30,7 +30,7 @@ clicked.
 React Fullscreen Image uses [compound components](https://kentcdodds.com/blog/compound-components-with-react-hooks). All `<Image />` components nested within an `<ImageGroup />` will be navigatable when in fullscreen mode.
 
 ```jsx
-import { ImageGroup, Image } from 'react-fullscreen-images'
+import { ImageGroup, Image } from 'react-fullscreen-image'
 
 const images = [
   'https://unsplash.com/photos/Bkci_8qcdvQ',
