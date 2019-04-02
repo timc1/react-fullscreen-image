@@ -1,10 +1,11 @@
 import React from 'react'
-import './fullscreen2.css'
+import './fullscreen.css'
 
 // For touch devices, we don't want to listen to click events but rather touchstart.
 const clickEvent = isMobile() ? 'touchstart' : 'click'
 
 type ImageGroupProps = {
+  transitionMs?: number
   children: React.ReactNode
 }
 
@@ -57,7 +58,12 @@ function reducer(
   }
 }
 
-export function ImageGroup({ children }: ImageGroupProps): any {
+export function ImageGroup({
+  transitionMs = 250,
+  children,
+}: ImageGroupProps): any {
+  const previousImageButton = React.useRef<HTMLButtonElement>(null)
+  const nextImageButton = React.useRef<HTMLButtonElement>(null)
   const isAnimating = React.useRef(false)
 
   const [state, dispatch] = React.useReducer(reducer, {
@@ -74,6 +80,7 @@ export function ImageGroup({ children }: ImageGroupProps): any {
         isFocused: index === state.currentFocusedImageIndex,
         shouldAnimate: state.shouldAnimate,
         isImageGroupExpanded: state.isImageGroupExpanded,
+        transitionMs,
         onClick: () => {
           // isAnimating flag allows us to prevent another dispatch
           // happening while an animation is taking place.
@@ -82,7 +89,7 @@ export function ImageGroup({ children }: ImageGroupProps): any {
               isAnimating.current = true
               setTimeout(() => {
                 isAnimating.current = false
-              }, 250)
+              }, transitionMs)
             }
 
             if (index === state.currentFocusedImageIndex) {
@@ -124,6 +131,7 @@ export function ImageGroup({ children }: ImageGroupProps): any {
           })
         }
         if (e.key === 'ArrowRight') {
+          if (nextImageButton.current) nextImageButton.current.focus()
           if (state.currentFocusedImageIndex + 1 === numberOfImageChildren) {
             dispatch({
               type: ImageGroup.actions.toggleExpand,
@@ -141,6 +149,7 @@ export function ImageGroup({ children }: ImageGroupProps): any {
           }
         }
         if (e.key === 'ArrowLeft') {
+          if (previousImageButton.current) previousImageButton.current.focus()
           if (state.currentFocusedImageIndex - 1 === -1) {
             dispatch({
               type: ImageGroup.actions.toggleExpand,
@@ -167,30 +176,42 @@ export function ImageGroup({ children }: ImageGroupProps): any {
       window.removeEventListener('resize', resizeListener)
     }
 
+    let scrollAnimationId = -1
+    let initialOffset = 0
+    let scrollListener = () => {
+      scrollAnimationId = requestAnimationFrame(scrollListener)
+      const difference = Math.abs(initialOffset - window.pageYOffset)
+      if (difference > 80) {
+        dispatch({
+          type: ImageGroup.actions.toggleCloseAnimate,
+        })
+      }
+    }
+
     if (state.isImageGroupExpanded) {
-      console.log('toggle event listeners')
       window.addEventListener(clickEvent, clickListener)
       window.addEventListener('keydown', keyDownListener)
       window.addEventListener('resize', resizeListener)
+      initialOffset = window.pageYOffset
+      scrollAnimationId = requestAnimationFrame(scrollListener)
     } else {
-      console.log('remove event listeners')
       window.removeEventListener(clickEvent, clickListener)
       window.removeEventListener('keydown', keyDownListener)
       window.removeEventListener('resize', resizeListener)
+      cancelAnimationFrame(scrollAnimationId)
     }
 
     return () => {
       window.removeEventListener(clickEvent, clickListener)
       window.removeEventListener('keydown', keyDownListener)
       window.removeEventListener('resize', resizeListener)
+      cancelAnimationFrame(scrollAnimationId)
     }
   }, [
     state.isImageGroupExpanded,
     numberOfImageChildren,
     state.currentFocusedImageIndex,
   ])
-
-  console.log('state', state)
 
   return (
     <div
@@ -199,7 +220,7 @@ export function ImageGroup({ children }: ImageGroupProps): any {
         state.isImageGroupExpanded ? ' fullscreen-group--expanded' : ''
       }`}
       style={{
-        transition: `opacity 250ms ease`,
+        transition: `opacity ${transitionMs}ms ease`,
       }}
     >
       {updatedChildren}
@@ -217,6 +238,7 @@ export function ImageGroup({ children }: ImageGroupProps): any {
             <ExitIcon />
           </button>
           <button
+            ref={previousImageButton}
             className="fullscreen-toggle toggle--left"
             onClick={() => {
               dispatch({
@@ -235,6 +257,7 @@ export function ImageGroup({ children }: ImageGroupProps): any {
             <Arrow direction="left" />
           </button>
           <button
+            ref={nextImageButton}
             className="fullscreen-toggle toggle--right"
             onClick={() => {
               dispatch({
@@ -270,6 +293,7 @@ export function Image({ src, alt, style, ...props }: ImageProps) {
     isFocused,
     shouldAnimate,
     isImageGroupExpanded,
+    transitionMs,
     ...rest
   } = props
 
@@ -287,7 +311,7 @@ export function Image({ src, alt, style, ...props }: ImageProps) {
       if (isFocused) {
         if (shouldAnimate) {
           // Animate in
-          calculatePosition('open')(element, 250)
+          calculatePosition('open')(element, transitionMs)
         } else {
           // Immediately show
           calculatePosition('open')(element, 0)
@@ -299,7 +323,7 @@ export function Image({ src, alt, style, ...props }: ImageProps) {
       if (!isFocused && wasPreviouslyFocused.current) {
         if (shouldAnimate) {
           // Animate out
-          calculatePosition('close')(element, 250)
+          calculatePosition('close')(element, transitionMs)
         } else {
           // Immediately hide
           calculatePosition('close')(element, 0)
@@ -308,7 +332,7 @@ export function Image({ src, alt, style, ...props }: ImageProps) {
         wasPreviouslyFocused.current = false
       }
     }
-  }, [isFocused, shouldAnimate])
+  }, [isFocused, shouldAnimate, transitionMs])
 
   return (
     <div className="fullscreen-container" {...rest}>

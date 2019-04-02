@@ -3,19 +3,29 @@ div.fullscreen-group {
 }
 div.fullscreen-group::before {
   content: '';
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: -1;
-  background: #fff;
+  background: rgba(255, 255, 255, 0.9);
+  z-index: 1;
+  pointer-events: none;
+  touch-action: none;
   opacity: 0;
   transition: inherit;
 }
-div.fullscreen-group.is-showing::before {
-  opacity: 0.9;
+div.fullscreen-group.fullscreen-group--expanded::before {
+  opacity: 1;
   z-index: 1;
+  pointer-events: initial;
+  touch-action: initial;
+}
+div.fullscreen-group.fullscreen-group--expanded button.fullscreen-toggle {
+  opacity: 1;
+}
+div.fullscreen-group.fullscreen-group--expanded button.fullscreen-btn {
+  cursor: zoom-out;
 }
 
 div.fullscreen-container {
@@ -24,6 +34,30 @@ div.fullscreen-container {
   left: 0;
   right: 0;
   bottom: 0;
+}
+
+button.fullscreen-toggle {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  padding: 20px;
+  border: none;
+  background: none;
+  opacity: 0;
+  transition: inherit;
+  cursor: pointer;
+  z-index: 9;
+  transition: background 250ms ease;
+}
+button.fullscreen-toggle:active {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+button.fullscreen-toggle.toggle--left {
+  left: 0;
+}
+button.fullscreen-toggle.toggle--right {
+  right: 0;
 }
 
 button.fullscreen-btn {
@@ -41,30 +75,23 @@ button.fullscreen-btn {
   cursor: zoom-in;
   outline: none;
 }
-button.fullscreen-btn.fullscreen-btn--focused {
-  cursor: zoom-out;
+
+button.fullscreen-exit-btn {
+  border: none;
+  background: none;
+  position: fixed;
+  top: 20px;
+  right: 0;
+  padding: 20px;
+  -webkit-appearance: none;
+  cursor: pointer;
+  z-index: 10;
 }
 
-div.fullscreen-img-container {
-  position: absolute;
+div.fullscreen-image {
+  position: inherit;
   top: inherit;
   left: inherit;
   right: inherit;
   bottom: inherit;
-  height: inherit;
-  width: inherit;
-}
-
-div.fullscreen-img-container.fullscreen-img--medium {
-  opacity: 1;
-}
-
-div.fullscreen-img-container.fullscreen-img--large {
-  opacity: 0;
-  visibility: hidden;
-}
-
-div.fullscreen-img-container.fullscreen-img--large::before {
-  content: '';
-  position: fixed;
 }
