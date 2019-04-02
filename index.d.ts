@@ -21,7 +21,7 @@ export type ImageProps = {
   [k: string]: any
 }
 
-declare module 'react-fullscreen-images' {
+declare module 'react-fullscreen-image' {
   export function ImageGroup(props: ImageGroupProps): any
   export function Image(props: ImageProps): any
 }
