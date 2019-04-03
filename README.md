@@ -17,6 +17,8 @@ You've got a list of images that you want to allow users to click and expand int
 React Fullscreen Image is a tiny library to render images that animate to fullscreen view when
 clicked.
 
+A live demo can be viewed on [CodeSandbox](https://codesandbox.io/s/o9m59jj3oq)!
+
 ## Features
 
 - Only animates transform and opacity properties.
@@ -33,15 +35,10 @@ React Fullscreen Image uses [compound components](https://kentcdodds.com/blog/co
 import { ImageGroup, Image } from 'react-fullscreen-image'
 
 const images = [
-  'https://unsplash.com/photos/Bkci_8qcdvQ',
-  'https://unsplash.com/photos/hS46bsAASwQ',
-  'https://unsplash.com/photos/2VDa8bnLM8c',
-  'https://unsplash.com/photos/_LuLiJc1cdo',
-  'https://unsplash.com/photos/1Z2niiBPg5A',
-  'https://unsplash.com/photos/pHANr-CpbYM',
-  'https://unsplash.com/photos/pQMM63GE7fo',
-  'https://unsplash.com/photos/2VDa8bnLM8c',
-  'https://unsplash.com/photos/MBkQKiH14ng',
+  'some_image_url',
+  'some_image_url',
+  'some_image_url',
+  'some_image_url'
 ]
 
 export default function App() {
@@ -53,16 +50,6 @@ export default function App() {
             <Image
               src={i}
               alt="nature"
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                height: '100%',
-                width: '100%',
-                objectFit: 'cover',
-              }}
             />
           </li>
         ))}
