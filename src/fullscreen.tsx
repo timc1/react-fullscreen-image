@@ -387,7 +387,7 @@ function calculatePosition(action: 'open' | 'close') {
   return function calculate(el: HTMLDivElement, transitionMs: number = 0) {
     if (action === 'open') {
       // 1. Determine whether we are scaling by height or width.
-      //    We will scale based on which ever one is smaller.
+      //    We will scale based on which ever one's scale is smaller.
       // 2. translateX the element to the center of the screen always.
       // 3. If we are scaling by height, translateY based on
       //    the viewport's top / 0px.
@@ -395,9 +395,11 @@ function calculatePosition(action: 'open' | 'close') {
       //    of the viewport height (window.innerHeight / 2)
       const { innerWidth, innerHeight } = window
       const { height, width, top, left } = el.getBoundingClientRect()
-      const scaleBy = innerWidth < innerHeight ? 'width' : 'height'
+      const widthScale = innerWidth / width
+      const heightScale = innerHeight / height
+      const scaleBy = widthScale < heightScale ? 'width' : 'height'
       const scale =
-        scaleBy === 'width' ? innerWidth / width : innerHeight / height
+        scaleBy === 'width' ? widthScale : heightScale
 
       // Calculate translateX to center of x axis.
       const scaledImageWidth = width * scale
