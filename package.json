@@ -18,14 +18,14 @@
     "build": "rm -rf ./lib && tsc && cp ./src/fullscreen.css ./lib"
   },
   "peerDependencies": {
-    "react": "^16.8.x",
-    "react-dom": "^16.8.x",
-    "typescript": "^3.3.3333"
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "typescript": "^4.2.4",
   },
   "devDependencies": {
-    "@types/jest": "24.0.11",
-    "@types/node": "11.12.1",
-    "@types/react": "16.8.10",
-    "@types/react-dom": "16.8.3"
+    "@types/jest": "26.0.23",
+    "@types/node": "15.0.1",
+    "@types/react": "17.0.4",
+    "@types/react-dom": "17.0.3"
   }
 }
